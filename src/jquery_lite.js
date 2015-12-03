@@ -4,52 +4,78 @@
     this.htmlElements = htmlElements;
   };
 
-  DOMNodeCollection.prototype.each = function (callback) {
-    this.htmlElements.forEach(function (el) {
-      callback(el);
-    }.bind(this));
-  };
+  DOMNodeCollection.prototype = {
+    each: function (callback) {
+      this.htmlElements.forEach(function (el) {
+        callback(el);
+      }.bind(this));
+    },
 
-  DOMNodeCollection.prototype.html = function (str) {
-    if (str || str === "") {
-      this.each(function (el) {
-        el.innerHTML = str;
-      });
-    } else {
-      return this.htmlElements[0].innerHTML;
-    }
-  };
-
-  DOMNodeCollection.prototype.empty = function () {
-    this.html("");
-  };
- 
-  DOMNodeCollection.prototype.append = function (obj) {
-    if (obj instanceof (HTMLElement)) {
-      this.each(function (el) {
-        el.appendChild(obj);
-      });
-    } else if (obj instanceof (DOMNodeCollection)) {
-      this.each(function (parentNode) {
-        obj.each(function (childNode) {
-          parentNode.appendChild(childNode);
+    html: function (str) {
+      if (typeof(str) === "string") {
+        this.each(function (el) {
+          el.innerHTML = str;
         });
-      });
-    } else {
+      } else {
+        return this.htmlElements[0].innerHTML;
+      }
+    },
+
+    empty: function () {
+      this.html("");
+    },
+  
+    append: function (obj) {
+      switch(typeof (obj)) {
+        case("string"):
+          this.each(function (el) {
+            el.innerHTML += obj;
+          });
+          break;
+        case("object"):
+          if (obj instanceof (HTMLElement)) {
+            this.each(function (el) {
+              el.appendChild(obj);
+            });
+          } else if (obj instanceof (DOMNodeCollection)) {
+            this.each(function (parentNode) {
+              obj.each(function (childNode) {
+                parentNode.appendChild(childNode);
+              });
+            });
+          }
+          break;
+      }
+
+      return this.htmlElements;
+    },
+
+    children: function () {
+      var childrenCollection = new DOMNodeCollection([]);
+      var children;
+
       this.each(function (el) {
-        el.innerHTML += obj;
+        children = el.children;
+        for (var i = 0; i < children.length; i++) {
+          childrenCollection.htmlElements.push(children[i]);
+        }
       });
+      return childrenCollection;
     }
-  };
+  }
 
   root.$l = function (arg) {
     var nodeArray;
     
-    if (arg instanceof (HTMLElement)) {
-      nodeArray = [arg];
-    } else {
-      var nodeList = document.querySelectorAll(arg);
-      nodeArray = Array.prototype.slice.call(nodeList);
+    switch (typeof arg) {
+      case("string"):
+        var nodeList = document.querySelectorAll(arg);
+        nodeArray = Array.prototype.slice.call(nodeList);
+        break;
+      case("object"):
+        if (arg instanceof (HTMLElement)) {
+          nodeArray = [arg];
+        }
     }
     
     return new DOMNodeCollection(nodeArray);
