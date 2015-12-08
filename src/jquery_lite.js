@@ -17,7 +17,9 @@
           el.innerHTML = str;
         });
       } else {
-        return this.htmlElements[0].innerHTML;
+        if (this.htmlElements.length > 0) {
+          return this.htmlElements[0].innerHTML;
+        }
       }
     },
 
@@ -61,6 +63,20 @@
         }
       });
       return childrenCollection;
+    },
+
+    parent: function () {
+      var parentCollection = new DOMNodeCollection([]);
+      var parentEl;
+
+      this.each(function (el) {
+        parentEl = el.parentElement;
+        if (parentEl) {
+          parentCollection.htmlElements.push(parentEl);
+        }
+      });
+
+      return parentCollection;
     }
   }
 
